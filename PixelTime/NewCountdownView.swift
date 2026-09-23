@@ -4,6 +4,7 @@ import SwiftData
 struct NewCountdownView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    let timeEngine: TimeEngine
     @State private var title = ""
     @State private var days = 0
     @State private var hours = 0
@@ -11,13 +12,17 @@ struct NewCountdownView: View {
     @State private var seconds = 0
     @State private var showError = false
     @State private var capsuleMode = false
+    @State private var dateMode = false
+    @State private var allDay = false
     @State private var style: CountdownStyle = .classic
     @State private var targetDate = Calendar.current.date(byAdding: .day, value: 7, to: .now) ?? .now.addingTimeInterval(86_400)
-    @State private var targetDateText = ""
     private var duration: Int { days * 86_400 + hours * 3_600 + minutes * 60 + seconds }
     private let maxDuration = 365 * 86_400
 
-    init(isCapsule: Bool = false) { _capsuleMode = State(initialValue: isCapsule) }
+    init(timeEngine: TimeEngine, isCapsule: Bool = false) {
+        self.timeEngine = timeEngine
+        _capsuleMode = State(initialValue: isCapsule)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 23) {
@@ -33,20 +38,37 @@ struct NewCountdownView: View {
                 modeButton("倒计时", selected: !capsuleMode) { capsuleMode = false }
                 modeButton("时间胶囊", selected: capsuleMode) { capsuleMode = true }
             }
+            if !capsuleMode {
+                HStack(spacing: 6) {
+                    modeButton("按时长", selected: !dateMode) { dateMode = false }
+                    modeButton("按日期", selected: dateMode) { dateMode = true }
+                }
+            }
             VStack(alignment: .leading, spacing: 8) {
                 fieldLabel("名称")
                 TextField("例如：周末旅行", text: $title).textFieldStyle(.plain).pixelFont(.body).foregroundStyle(PixelTheme.text)
                     .padding(12).background(PixelTheme.background.opacity(0.7), in: RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(PixelTheme.border, lineWidth: 1))
             }
-            if capsuleMode {
-                VStack(alignment: .leading, spacing: 9) {
-                    fieldLabel("开启时间")
-                    TextField("年-月-日 时:分", text: $targetDateText).textFieldStyle(.plain).pixelFont(.body)
-                        .foregroundStyle(PixelTheme.text).padding(11)
-                        .background(PixelTheme.background.opacity(0.75), in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(PixelTheme.border, lineWidth: 1))
-                    Text("到达这个时刻，胶囊便会开启。").pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+            if capsuleMode || dateMode {
+                VStack(alignment: .leading, spacing: 12) {
+                    fieldLabel(capsuleMode ? "胶囊开启时间" : "目标日期")
+                    DatePicker("日期", selection: $targetDate, in: timeEngine.now..., displayedComponents: .date)
+                        .datePickerStyle(.compact).labelsHidden().environment(\.font, PixelTypography.font(.body))
+                    if !capsuleMode {
+                        Toggle(isOn: $allDay) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("全天事件").pixelFont(.body).foregroundStyle(PixelTheme.text)
+                                Text("按日历日期计算，不指定时刻").pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                            }
+                        }.toggleStyle(.switch).tint(PixelTheme.primary)
+                    }
+                    if !allDay || capsuleMode {
+                        DatePicker("时间", selection: $targetDate, in: timeEngine.now..., displayedComponents: .hourAndMinute)
+                            .datePickerStyle(.compact).labelsHidden().environment(\.font, PixelTypography.font(.body))
+                    }
+                    Text(capsuleMode ? "到达这个时刻，胶囊便会开启。" : (allDay ? "目标日期按当前日历和时区计算。" : "进入最后 24 小时后，将显示时分秒。"))
+                        .pixelFont(.caption).foregroundStyle(PixelTheme.muted)
                 }
             } else {
                 VStack(alignment: .leading, spacing: 11) {
@@ -66,7 +88,7 @@ struct NewCountdownView: View {
                 }
             }
             if showError {
-                Text(capsuleMode ? "请填写名称和未来时间，格式：年-月-日 时:分。" : "请填写名称和时长（1 秒至 365 天）。")
+                Text(capsuleMode || dateMode ? "请填写名称，并选择未来的日期或时间。" : "请填写名称和时长（1 秒至 365 天）。")
                     .pixelFont(.caption).foregroundStyle(.orange)
             }
             HStack(spacing: 10) {
@@ -80,8 +102,6 @@ struct NewCountdownView: View {
             }
         }
         .padding(24).frame(width: 420).background(PixelTheme.surface).preferredColorScheme(.dark)
-        .onAppear { targetDateText = formatted(targetDate) }
-        .onChange(of: targetDateText) { _, newValue in if let date = parseDate(newValue) { targetDate = date } }
     }
 
     private func fieldLabel(_ value: String) -> some View {
@@ -107,28 +127,29 @@ struct NewCountdownView: View {
                 .overlay(Rectangle().stroke(selected ? PixelTheme.primary : PixelTheme.border, lineWidth: 1))
         }.buttonStyle(PixelButtonStyle())
     }
-    private func formatted(_ date: Date) -> String {
-        let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.timeZone = .current; formatter.dateFormat = "yyyy-MM-dd HH:mm"
-        return formatter.string(from: date)
-    }
-    private func parseDate(_ string: String) -> Date? {
-        let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.timeZone = .current; formatter.dateFormat = "yyyy-MM-dd HH:mm"
-        return formatter.date(from: string)
-    }
     private func create() {
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let capsuleTarget = capsuleMode ? parseDate(targetDateText) : nil
-        if capsuleMode && capsuleTarget == nil { showError = true; return }
-        let capsuleDuration = capsuleTarget?.timeIntervalSinceNow ?? 0
+        let isScheduledDate = !capsuleMode && dateMode
+        let selectedTarget = capsuleMode || isScheduledDate ? targetDate : nil
+        let normalizedTarget: Date?
+        if isScheduledDate && allDay, let selectedTarget {
+            normalizedTarget = Calendar.current.startOfDay(for: selectedTarget)
+        } else {
+            normalizedTarget = selectedTarget
+        }
+        let targetDuration = normalizedTarget?.timeIntervalSince(timeEngine.now) ?? 0
         guard !cleanTitle.isEmpty,
-              capsuleMode ? capsuleDuration > 0 : duration > 0,
-              capsuleMode || duration <= maxDuration else { showError = true; return }
+              ((capsuleMode || isScheduledDate) ? targetDuration > 0 : duration > 0),
+              capsuleMode || isScheduledDate || duration <= maxDuration else { showError = true; return }
         let item = Countdown(title: cleanTitle,
-                             duration: capsuleMode ? capsuleDuration : TimeInterval(duration),
+                             duration: capsuleMode || isScheduledDate ? targetDuration : TimeInterval(duration),
                              style: style,
                              isCapsule: capsuleMode,
-                             targetDate: capsuleTarget)
-        if capsuleMode { item.isRunning = true }
+                             targetDate: normalizedTarget,
+                             isDateBased: isScheduledDate,
+                             isAllDay: isScheduledDate && allDay,
+                             createdAt: timeEngine.now)
+        if capsuleMode || isScheduledDate { item.isRunning = true }
         modelContext.insert(item)
         try? modelContext.save()
         dismiss()

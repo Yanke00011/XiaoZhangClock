@@ -73,6 +73,9 @@ extension View {
 }
 
 enum PixelFontRegistrar {
+    // CoreText's kCTFontManagerErrorAlreadyRegistered value.
+    private static let alreadyRegisteredErrorCode: CFIndex = 105
+
     static func registerBundledFont() {
         guard let url = Bundle.main.url(forResource: "fusion-pixel-10px-monospaced-zh_hans", withExtension: "ttf", subdirectory: "Fonts") else {
             assertionFailure("Bundled Fusion Pixel font is missing from Resources/Fonts")
@@ -80,7 +83,8 @@ enum PixelFontRegistrar {
         }
         var error: Unmanaged<CFError>?
         if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error),
-           let error = error?.takeRetainedValue() {
+           let error = error?.takeRetainedValue(),
+           CFErrorGetCode(error) != alreadyRegisteredErrorCode {
             NSLog("Pixel Time font registration failed: %@", error.localizedDescription as NSString)
         }
     }
@@ -88,11 +92,12 @@ enum PixelFontRegistrar {
 
 struct PixelWorldBackground: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     var tone: Color = PixelTheme.primary
     var particleCount = 22
     var isAnimated = true
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 12.0, paused: reduceMotion || !isAnimated)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 6.0, paused: reduceMotion || scenePhase != .active || !isAnimated)) { timeline in
             Canvas { context, size in
                 let step: CGFloat = 36
                 var grid = Path()
@@ -128,16 +133,16 @@ struct PixelWorldBackground: View {
 struct PixelSurface<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {
-        content
-            .padding(18)
-            .background {
-                if #available(macOS 26.0, *) {
-                    RoundedRectangle(cornerRadius: 22).fill(.clear).glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22))
-                } else {
-                    RoundedRectangle(cornerRadius: 22).fill(PixelTheme.surface.opacity(0.96))
-                }
+        Group {
+            if #available(macOS 26.0, *) {
+                content.padding(18)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.035)), in: RoundedRectangle(cornerRadius: 22))
+            } else {
+                content.padding(18)
+                    .background(PixelTheme.surface.opacity(0.96), in: RoundedRectangle(cornerRadius: 22))
             }
-            .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(0.10), lineWidth: 1))
+        }
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(0.14), lineWidth: 0.8))
     }
 }
 

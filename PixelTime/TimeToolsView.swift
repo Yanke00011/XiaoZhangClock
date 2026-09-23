@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 enum PixelTab: String, CaseIterable, Identifiable {
     case clock, timers, stopwatch, focus, explore, settings, about
@@ -48,38 +47,41 @@ struct PixelTabBar: View {
                     .contentShape(Rectangle())
                     .background {
                         if selection == tab {
-                            Capsule().fill(PixelTheme.primary.opacity(0.12))
-                                .overlay(Capsule().stroke(PixelTheme.primary.opacity(0.22), lineWidth: 1))
-                                .matchedGeometryEffect(id: "pixel-tab-selection", in: selectionAnimation)
+                            Group {
+                                if #available(macOS 26.0, *) {
+                                    Capsule().glassEffect(.regular.tint(PixelTheme.primary.opacity(0.20)).interactive(), in: Capsule())
+                                } else {
+                                    Capsule().fill(PixelTheme.primary.opacity(0.12))
+                                        .overlay(Capsule().stroke(PixelTheme.primary.opacity(0.22), lineWidth: 1))
+                                }
+                            }.matchedGeometryEffect(id: "pixel-tab-selection", in: selectionAnimation)
                         }
                     }
                 }
                 .buttonStyle(PixelButtonStyle())
             }
         }
+        .padding(1)
         .padding(.horizontal, 9).padding(.vertical, 7)
         .background {
             if #available(macOS 26.0, *) {
-                Capsule().fill(.clear).glassEffect(.regular, in: Capsule())
+                Capsule().glassEffect(.regular.tint(Color.white.opacity(0.045)).interactive(), in: Capsule())
             } else {
                 Capsule().fill(PixelTheme.surface.opacity(0.96))
             }
         }
-        .overlay(Capsule().stroke(Color.white.opacity(0.14), lineWidth: 1))
-        .shadow(color: PixelTheme.secondary.opacity(0.11), radius: 18, y: 5)
+        .overlay(Capsule().stroke(Color.white.opacity(0.24), lineWidth: 0.8))
+        .shadow(color: PixelTheme.secondary.opacity(0.08), radius: 14, y: 4)
     }
     @Namespace private var selectionAnimation
 }
 
 struct StopwatchView: View {
+    @Environment(TimeEngine.self) private var timeEngine
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isRunning = false
-    @State private var elapsedBeforeStart: TimeInterval = 0
-    @State private var startUptime: TimeInterval = 0
-    @State private var now = Date()
-    @State private var laps: [TimeInterval] = []
-    private let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
-    private var elapsed: TimeInterval { isRunning ? elapsedBeforeStart + ProcessInfo.processInfo.systemUptime - startUptime : elapsedBeforeStart }
+    private var isRunning: Bool { timeEngine.stopwatchIsRunning }
+    private var laps: [TimeInterval] { timeEngine.stopwatchLaps }
+    private var elapsed: TimeInterval { timeEngine.stopwatchElapsed }
     private var readout: String {
         let hundredths = Int((elapsed * 100).rounded(.down))
         return String(format: "%02d:%02d.%02d", hundredths / 6000, (hundredths / 100) % 60, hundredths % 100)
@@ -91,15 +93,15 @@ struct StopwatchView: View {
             PixelGlyphClock(value: readout, color: PixelTheme.secondary, height: 78).frame(height: 82).padding(.top, 8)
             HStack(spacing: 10) {
                 toolButton(isRunning ? "暂停" : "开始", icon: isRunning ? .pause : .play, prominent: true) {
-                    if isRunning { elapsedBeforeStart = elapsed; isRunning = false }
-                    else { startUptime = ProcessInfo.processInfo.systemUptime; isRunning = true }
+                    if isRunning { timeEngine.pauseStopwatch() }
+                    else { timeEngine.startStopwatch() }
                 }
                 toolButton("计次", icon: .timer, prominent: false) {
                     guard isRunning else { return }
-                    laps.insert(elapsed, at: 0)
+                    timeEngine.recordStopwatchLap()
                 }.disabled(!isRunning)
                 toolButton("重置", icon: .reset, prominent: false) {
-                    isRunning = false; elapsedBeforeStart = 0; laps.removeAll()
+                    timeEngine.resetStopwatch()
                 }
             }
             if !laps.isEmpty {
@@ -118,7 +120,8 @@ struct StopwatchView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .onReceive(timer) { now = $0 }
+        .onAppear { timeEngine.setHundredthUpdates(isRunning) }
+        .onDisappear { timeEngine.setHundredthUpdates(false) }
     }
 
     private func format(_ value: TimeInterval) -> String {
@@ -133,16 +136,15 @@ private enum FocusPhase: String, CaseIterable, Identifiable {
 }
 
 struct FocusView: View {
+    @Environment(TimeEngine.self) private var timeEngine
     @State private var phase: FocusPhase = .focus
     @State private var preset = "25 分钟"
     @State private var customMinutes = 40
     @State private var remaining: TimeInterval = 25 * 60
     @State private var isRunning = false
-    @State private var startUptime: TimeInterval = 0
+    @State private var startInstant: ContinuousClock.Instant = ContinuousClock().now
     @State private var storedRemaining: TimeInterval = 25 * 60
     @State private var completed = false
-    @State private var now = Date()
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private var duration: TimeInterval {
         switch phase {
         case .focus:
@@ -157,7 +159,7 @@ struct FocusView: View {
         }
     }
     private var liveRemaining: TimeInterval {
-        isRunning ? max(0, storedRemaining - (ProcessInfo.processInfo.systemUptime - startUptime)) : remaining
+        isRunning ? max(0, storedRemaining - elapsed(since: startInstant, until: timeEngine.monotonicNow)) : remaining
     }
     private var clockText: String {
         let n = Int(liveRemaining.rounded(.up))
@@ -203,17 +205,19 @@ struct FocusView: View {
             Text(completed ? "本轮已完成" : "\(phase.rawValue)中").pixelFont(.caption).tracking(0.7).foregroundStyle(completed ? PixelTheme.secondary : PixelTheme.muted)
             HStack(spacing: 10) {
                 toolButton(isRunning ? "暂停" : (completed ? "再来一次" : "开始"), icon: isRunning ? .pause : .play, prominent: true) {
-                    if isRunning { remaining = liveRemaining; storedRemaining = remaining; isRunning = false }
+                    if isRunning {
+                        startInstant = timeEngine.captureMonotonicInstant()
+                        remaining = liveRemaining; storedRemaining = remaining; isRunning = false
+                    }
                     else {
                         if completed || remaining <= 0 { remaining = duration; storedRemaining = duration; completed = false }
-                        startUptime = ProcessInfo.processInfo.systemUptime; isRunning = true
+                        startInstant = timeEngine.captureMonotonicInstant(); isRunning = true
                     }
                 }
                 toolButton("重置", icon: .reset, prominent: false) { remaining = duration; storedRemaining = duration; isRunning = false; completed = false }
             }
         }
-        .onReceive(timer) { date in
-            now = date
+        .onChange(of: timeEngine.now) { _, _ in
             guard isRunning, liveRemaining <= 0 else { return }
             remaining = 0; storedRemaining = 0; isRunning = false; completed = true
         }
@@ -230,17 +234,15 @@ struct FocusView: View {
 }
 
 struct TimeMachineView: View {
+    @Environment(TimeEngine.self) private var timeEngine
     @State private var offsetHours: Double = 0
-    @State private var now = Date()
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    private var target: Date { now.addingTimeInterval(offsetHours * 3_600) }
+    @AppStorage("uses24HourTime") private var uses24HourTime = true
+    private var target: Date { timeEngine.now.addingTimeInterval(offsetHours * 3_600) }
     private var timeText: String {
-        let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.timeZone = .current; formatter.dateFormat = "HH:mm"
-        return formatter.string(from: target)
+        TimePresentation.clock(target, uses24HourTime: uses24HourTime, timeZone: .current)
     }
     private var dateText: String {
-        let formatter = DateFormatter(); formatter.locale = Locale(identifier: "zh_CN"); formatter.timeZone = .current; formatter.dateFormat = "EEEE · M月d日"
-        return formatter.string(from: target)
+        TimePresentation.longDate(target, timeZone: .current)
     }
     private var offsetLabel: String {
         if abs(offsetHours) < 0.01 { return "现在" }
@@ -273,8 +275,12 @@ struct TimeMachineView: View {
             Text("本地时间 · \(PixelTimeZoneName.chineseCity(for: .current))").pixelFont(.caption).tracking(0.6).foregroundStyle(PixelTheme.muted)
             Text("这里只是预览，不会修改系统时间。").pixelFont(.caption).foregroundStyle(PixelTheme.muted)
         }
-        .onReceive(timer) { now = $0 }
     }
+}
+
+private func elapsed(since start: ContinuousClock.Instant, until end: ContinuousClock.Instant) -> TimeInterval {
+    let components = start.duration(to: end).components
+    return Double(components.seconds) + Double(components.attoseconds) / 1_000_000_000_000_000_000
 }
 
 private struct PixelTimelineControl: View {

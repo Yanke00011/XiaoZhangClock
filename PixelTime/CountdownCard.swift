@@ -1,18 +1,16 @@
 import SwiftUI
 import SwiftData
-import Combine
 
 struct CountdownCard: View {
+    @Environment(TimeEngine.self) private var timeEngine
     @Environment(\.modelContext) private var modelContext
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Bindable var countdown: Countdown
-    @State private var now = Date()
+    private var now: Date { timeEngine.now }
     @State private var celebrate = false
     @State private var collapseProgress = -1.0
     @State private var showingActions = false
     @State private var showingDeleteConfirmation = false
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-
     private var remaining: TimeInterval { countdown.remaining(at: now) }
     private var fraction: Double { countdown.totalDuration > 0 ? min(1, max(0, remaining / countdown.totalDuration)) : 0 }
     private var status: String {
@@ -57,7 +55,10 @@ struct CountdownCard: View {
                     } else if countdown.style == .matrix {
                         matrixReadout.frame(maxWidth: .infinity)
                     } else {
-                        PixelGlyphClock(value: timeLabel, collapseProgress: collapseProgress >= 0 ? collapseProgress : nil, height: 44)
+                        HStack(alignment: .firstTextBaseline, spacing: 5) {
+                            PixelGlyphClock(value: timeLabel, collapseProgress: collapseProgress >= 0 ? collapseProgress : nil, height: 44)
+                            if showsCalendarDays { Text("天").pixelFont(.caption).foregroundStyle(PixelTheme.muted) }
+                        }
                     }
                 }
                     .foregroundStyle(countdown.isCompleted ? PixelTheme.primary : PixelTheme.text).minimumScaleFactor(0.6)
@@ -67,7 +68,8 @@ struct CountdownCard: View {
                 PixelProgress(fraction: fraction, active: countdown.isRunning || countdown.isCompleted, color: statusColor).frame(height: 8)
             }
             HStack {
-                Text("\(Int(fraction * 100))% \(countdown.isCapsule ? "后开启" : "剩余")").pixelFont(.caption).tracking(0.4).foregroundStyle(PixelTheme.muted)
+                Text(countdown.isDateBased ? targetSummary : "\(Int(fraction * 100))% \(countdown.isCapsule ? "后开启" : "剩余")")
+                    .pixelFont(.caption).tracking(0.4).foregroundStyle(PixelTheme.muted)
                 Spacer()
                 if countdown.style == .ring {
                     PixelRing(fraction: fraction, color: countdown.isRunning || countdown.isCompleted ? statusColor : PixelTheme.primary.opacity(0.7))
@@ -75,7 +77,7 @@ struct CountdownCard: View {
                 }
                 Button {
                     if countdown.isRunning { countdown.pause(at: now) }
-                    else if countdown.isCompleted { countdown.reset() }
+                    else if countdown.isCompleted { countdown.reset(at: now) }
                     else { countdown.start(at: now) }
                     persist()
                 } label: {
@@ -97,7 +99,7 @@ struct CountdownCard: View {
         .overlay(alignment: .topTrailing) {
             if showingActions {
                 VStack(spacing: 0) {
-                    actionMenuButton("重置", icon: .reset) { countdown.reset(); persist(); showingActions = false }
+                    actionMenuButton("重置", icon: .reset) { countdown.reset(at: now); persist(); showingActions = false }
                     Rectangle().fill(PixelTheme.border).frame(height: 1)
                     actionMenuButton("删除", icon: .trash) { showingDeleteConfirmation = true; showingActions = false }
                 }
@@ -117,8 +119,13 @@ struct CountdownCard: View {
         }
         .shadow(color: countdown.isRunning ? PixelTheme.primary.opacity(0.045) : .clear, radius: 16, y: 4)
         .scaleEffect(celebrate ? 1.025 : 1)
-        .onReceive(timer) { date in
-            now = date
+        .onAppear {
+            if countdown.isRunning && countdown.remaining(at: now) <= 0 {
+                countdown.reconcile(at: now)
+                persist()
+            }
+        }
+        .onChange(of: timeEngine.now) { _, date in
             if countdown.isRunning && countdown.remaining(at: date) <= 0 {
                 countdown.reconcile(at: date); persist()
                 guard !reduceMotion else { return }
@@ -139,19 +146,57 @@ struct CountdownCard: View {
     }
 
     private var timeLabel: String {
+        if countdown.isDateBased {
+            if countdown.isAllDay && remaining >= 86_400 {
+                let days = calendarDaysRemaining
+                return days > 0 ? "\(days)" : "今天"
+            }
+            if remaining >= 86_400 {
+                let days = calendarDaysRemaining
+                if days > 0 { return "\(days)" }
+                let value = Int(remaining.rounded(.up))
+                return String(format: "%02d:%02d:%02d", value / 3_600, (value / 60) % 60, value % 60)
+            }
+        }
         let value = Int(remaining.rounded(.up))
         let days = value / 86_400, hours = (value % 86_400) / 3_600, minutes = (value % 3_600) / 60, seconds = value % 60
         return days > 0 ? String(format: "%d天 %02d:%02d:%02d", days, hours, minutes, seconds) : String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
+    private var showsCalendarDays: Bool {
+        guard countdown.isDateBased, !countdown.isCompleted else { return false }
+        return remaining >= 86_400 && calendarDaysRemaining > 0
+    }
+    private var calendarDaysRemaining: Int {
+        let calendar = Calendar.current
+        let target = countdown.targetDate ?? now.addingTimeInterval(remaining)
+        let start = countdown.isAllDay ? calendar.startOfDay(for: now) : now
+        let end = countdown.isAllDay ? calendar.startOfDay(for: target) : target
+        return calendar.dateComponents([.day], from: start, to: end).day ?? 0
+    }
+    private var targetSummary: String {
+        guard let targetDate = countdown.targetDate else { return "\(Int(remaining.rounded(.up))) 秒后" }
+        return TimePresentation.shortDate(targetDate) + (countdown.isAllDay ? " · 全天" : " · " + TimePresentation.time(targetDate))
+    }
     private var matrixReadout: some View {
         let value = Int(remaining.rounded(.up))
-        let first = value / 86_400 > 0 ? value / 86_400 : (value % 86_400) / 3_600
-        let second = value / 86_400 > 0 ? (value % 86_400) / 3_600 : (value % 3_600) / 60
-        let third = value / 86_400 > 0 ? (value % 3_600) / 60 : value % 60
+        let calendarDays = countdown.isDateBased && remaining >= 86_400 ? calendarDaysRemaining : 0
+        let dayCount = countdown.isDateBased ? calendarDays : value / 86_400
+        let usesDays = dayCount > 0
+        let first = usesDays ? dayCount : (countdown.isDateBased ? value / 3_600 : (value % 86_400) / 3_600)
+        let calendarRemainder: DateComponents? = {
+            guard calendarDays > 0 else { return nil }
+            let calendar = Calendar.current
+            let target = countdown.targetDate ?? now.addingTimeInterval(remaining)
+            let base = countdown.isAllDay ? calendar.startOfDay(for: now) : now
+            guard let afterWholeDays = calendar.date(byAdding: .day, value: calendarDays, to: base) else { return nil }
+            return calendar.dateComponents([.hour, .minute], from: afterWholeDays, to: target)
+        }()
+        let second = calendarRemainder?.hour ?? (usesDays ? (value % 86_400) / 3_600 : (value % 3_600) / 60)
+        let third = calendarRemainder?.minute ?? (usesDays ? (value % 3_600) / 60 : value % 60)
         return HStack(alignment: .center, spacing: 22) {
-            matrixColumn(first, unit: value / 86_400 > 0 ? "天" : "时")
-            matrixColumn(second, unit: value / 86_400 > 0 ? "时" : "分")
-            matrixColumn(third, unit: value / 86_400 > 0 ? "分" : "秒")
+            matrixColumn(first, unit: usesDays ? "天" : "时")
+            matrixColumn(second, unit: usesDays ? "时" : "分")
+            matrixColumn(third, unit: usesDays ? "分" : "秒")
         }
     }
     private func matrixColumn(_ value: Int, unit: String) -> some View {

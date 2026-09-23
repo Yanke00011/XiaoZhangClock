@@ -1,19 +1,19 @@
 import SwiftUI
 import SwiftData
-import Combine
 
 struct ContentView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \Countdown.createdAt, order: .reverse) private var countdowns: [Countdown]
     @State private var showingNewCountdown = false
     @State private var newCountdownIsCapsule = false
     @State private var selectedTab: PixelTab = .clock
     @State private var appeared = false
-    @State private var now = Date()
+    @State private var timeEngine = TimeEngine.shared
     @AppStorage("pixelAnimationsEnabled") private var pixelAnimations = true
     @AppStorage("uses24HourTime") private var uses24HourTime = true
-    private let clockTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private var now: Date { timeEngine.now }
     private var mood: PixelTimeMood { PixelTimeMood.at(now) }
     private var pageAccent: Color {
         switch selectedTab {
@@ -47,13 +47,25 @@ struct ContentView: View {
         .animation(reduceMotion ? nil : .easeOut(duration: 0.7), value: appeared)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.32), value: selectedTab)
         .environment(\.font, PixelTypography.font(.body))
+        .environment(timeEngine)
         .onAppear {
+            timeEngine.start()
             appeared = true
-            countdowns.forEach { $0.reconcile() }
+            countdowns.forEach { $0.reconcile(at: timeEngine.now) }
             try? modelContext.save()
         }
-        .onReceive(clockTimer) { now = $0 }
-        .sheet(isPresented: $showingNewCountdown) { NewCountdownView(isCapsule: newCountdownIsCapsule) }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                timeEngine.start()
+                timeEngine.refreshForForeground()
+            } else {
+                timeEngine.stop()
+            }
+        }
+        .onDisappear { timeEngine.stop() }
+        .sheet(isPresented: $showingNewCountdown) {
+            NewCountdownView(timeEngine: timeEngine, isCapsule: newCountdownIsCapsule)
+        }
     }
 
     @ViewBuilder private var pageContent: some View {
@@ -119,9 +131,20 @@ struct ContentView: View {
             Spacer()
             HStack(spacing: 6) {
                 Circle().fill(PixelTheme.primary).frame(width: 5, height: 5).shadow(color: PixelTheme.primary.opacity(0.7), radius: 5)
-                Text("本地时间 · 实时").pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.muted)
+                Text(headerTimeStatus)
+                    .pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.muted)
             }
         }.padding(.top, 24)
+    }
+
+    private var headerTimeStatus: String {
+        guard timeEngine.source == .network else { return "本地时间 · 实时" }
+        return switch timeEngine.syncState {
+        case .synchronized: "实时时间 · 已校准"
+        case .syncing: "实时时间 · 正在同步"
+        case .idle: "实时时间 · 尚未同步"
+        case .unavailable(let message): message.contains("上次校准") ? "实时时间 · 暂时离线" : "实时时间 · 本地回退"
+        }
     }
 
     private var sectionHeader: some View {

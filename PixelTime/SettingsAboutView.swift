@@ -1,15 +1,49 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(TimeEngine.self) private var timeEngine
     @Binding var pixelAnimations: Bool
     @Binding var uses24HourTime: Bool
 
     var body: some View {
+        @Bindable var bindableTimeEngine = timeEngine
         VStack(alignment: .leading, spacing: 22) {
             pageTitle("设置", subtitle: "调整你的像素时间")
-            PixelSurface {
-                VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 18) {
                     sectionTitle("时间")
+                    settingRow("时间来源", detail: timeEngine.source.title) {
+                        Picker("时间来源", selection: $bindableTimeEngine.source) {
+                            ForEach(TimeSource.allCases) { source in Text(source.title).tag(source) }
+                        }
+                        .labelsHidden().pickerStyle(.segmented).frame(width: 190).environment(\.font, PixelTypography.font(.caption))
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Circle().fill(timeStateColor).frame(width: 6, height: 6)
+                            Text(timeEngine.syncState.title).pixelFont(.caption).foregroundStyle(timeStateColor)
+                            Spacer()
+                            if timeEngine.source == .network {
+                                Text(String(format: "%+.2f 秒", timeEngine.networkOffset)).pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                            }
+                        }
+                        if let lastSync = timeEngine.lastSynchronizedAt {
+                            Text("上次校准：\(TimePresentation.time(lastSync)) · Google 公共 NTP")
+                                .pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                        } else {
+                            Text("网络校准不会修改 macOS 系统时钟。")
+                                .pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                        }
+                        Button {
+                            Task { await timeEngine.synchronize() }
+                        } label: {
+                            HStack(spacing: 7) {
+                                PixelIcon(symbol: .reset, color: PixelTheme.primary, size: 11)
+                                Text("立即同步").pixelFont(.caption).foregroundStyle(PixelTheme.primary)
+                            }.contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain).disabled(timeEngine.syncState == .syncing)
+                    }
+                    Divider().overlay(PixelTheme.border)
                     settingRow("时间格式", detail: uses24HourTime ? "24 小时制" : "12 小时制") {
                         Picker("时间格式", selection: $uses24HourTime) {
                             Text("24 小时制").tag(true)
@@ -27,17 +61,15 @@ struct SettingsView: View {
                     Text("系统辅助功能中的“减少动态效果”始终优先生效。")
                             .pixelFont(.caption).foregroundStyle(PixelTheme.muted)
                     }
-                }
             }
-            PixelSurface {
-                VStack(alignment: .leading, spacing: 12) {
+            Rectangle().fill(PixelTheme.border).frame(height: 1).padding(.vertical, 2)
+            VStack(alignment: .leading, spacing: 12) {
                     sectionTitle("外观")
                     HStack(spacing: 9) {
                         colorSwatch("深夜蓝", color: PixelTheme.background, selected: true)
                         colorSwatch("电光青", color: PixelTheme.primary, selected: false)
                         colorSwatch("像素紫", color: PixelTheme.secondary, selected: false)
                     }
-                }
             }
         }
     }
@@ -55,6 +87,14 @@ struct SettingsView: View {
 
     private func sectionTitle(_ value: String) -> some View {
         Text(value).pixelFont(.headline).foregroundStyle(PixelTheme.secondary)
+    }
+
+    private var timeStateColor: Color {
+        switch timeEngine.syncState {
+        case .synchronized: PixelTheme.success
+        case .syncing: PixelTheme.warning
+        case .idle, .unavailable: PixelTheme.muted
+        }
     }
 
     private func colorSwatch(_ title: String, color: Color, selected: Bool) -> some View {

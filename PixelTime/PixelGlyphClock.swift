@@ -8,6 +8,9 @@ struct PixelGlyphClock: View {
     @State private var previousValue = ""
     @State private var transitionStarted = Date.distantPast
     private let transitionDuration = 0.38
+    private var isTransitioning: Bool {
+        transitionStarted != .distantPast && Date.now.timeIntervalSince(transitionStarted) < transitionDuration
+    }
 
     private static let glyphs: [Character: [String]] = [
         "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
@@ -27,7 +30,7 @@ struct PixelGlyphClock: View {
     ]
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion || !isTransitioning)) { timeline in
             Canvas { context, size in
                 let columns = max(1, value.count * 6 - 1)
                 let cell = min(size.height / 7, size.width / CGFloat(columns))

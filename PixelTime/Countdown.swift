@@ -25,18 +25,22 @@ final class Countdown {
     var styleRawValue: String = CountdownStyle.classic.rawValue
     var isCapsule = false
     var targetDate: Date?
+    var isDateBased = false
+    var isAllDay = false
 
-    init(title: String, duration: TimeInterval, style: CountdownStyle = .classic, isCapsule: Bool = false, targetDate: Date? = nil) {
+    init(title: String, duration: TimeInterval, style: CountdownStyle = .classic, isCapsule: Bool = false, targetDate: Date? = nil, isDateBased: Bool = false, isAllDay: Bool = false, createdAt: Date = .now) {
         self.title = title
         self.totalDuration = duration
         self.storedRemaining = duration
-        self.createdAt = .now
+        self.createdAt = createdAt
         self.startedAt = nil
         self.isRunning = false
         self.isCompleted = false
         self.styleRawValue = style.rawValue
         self.isCapsule = isCapsule
         self.targetDate = targetDate
+        self.isDateBased = isDateBased
+        self.isAllDay = isAllDay
     }
 
     var style: CountdownStyle {
@@ -45,7 +49,7 @@ final class Countdown {
     }
 
     func remaining(at date: Date = .now) -> TimeInterval {
-        if isCapsule {
+        if isCapsule || isDateBased {
             if isRunning, let targetDate { return max(0, targetDate.timeIntervalSince(date)) }
             return max(0, storedRemaining)
         }
@@ -56,7 +60,7 @@ final class Countdown {
     func start(at date: Date = .now) {
         guard !isCompleted, remaining(at: date) > 0 else { return }
         storedRemaining = remaining(at: date)
-        if isCapsule { targetDate = date.addingTimeInterval(storedRemaining) }
+        if isCapsule || isDateBased { targetDate = date.addingTimeInterval(storedRemaining) }
         startedAt = date
         isRunning = true
     }
@@ -64,17 +68,17 @@ final class Countdown {
     func pause(at date: Date = .now) {
         guard isRunning else { return }
         storedRemaining = remaining(at: date)
-        if isCapsule { targetDate = nil }
+        if isCapsule || isDateBased { targetDate = nil }
         startedAt = nil
         isRunning = false
         if storedRemaining <= 0 { isCompleted = true }
     }
 
-    func reset() {
+    func reset(at date: Date = .now) {
         isRunning = isCapsule
         startedAt = nil
         storedRemaining = totalDuration
-        targetDate = isCapsule ? Date.now.addingTimeInterval(totalDuration) : nil
+        targetDate = isCapsule || isDateBased ? date.addingTimeInterval(totalDuration) : nil
         isCompleted = false
     }
 
