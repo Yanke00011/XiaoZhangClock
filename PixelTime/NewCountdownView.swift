@@ -131,24 +131,29 @@ struct NewCountdownView: View {
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let isScheduledDate = !capsuleMode && dateMode
         let selectedTarget = capsuleMode || isScheduledDate ? targetDate : nil
-        let normalizedTarget: Date?
+        let calendar = Calendar.current
+        let now = timeEngine.now
+        var normalizedTarget: Date? = selectedTarget
+        var scheduledDuration = selectedTarget?.timeIntervalSince(now) ?? 0
+        var allDayIsValid = true
         if isScheduledDate && allDay, let selectedTarget {
-            normalizedTarget = Calendar.current.startOfDay(for: selectedTarget)
-        } else {
-            normalizedTarget = selectedTarget
+            let selectedDay = calendar.startOfDay(for: selectedTarget)
+            allDayIsValid = selectedDay >= calendar.startOfDay(for: now)
+            normalizedTarget = selectedDay
+            let endOfDay = calendar.date(byAdding: .day, value: 1, to: selectedDay) ?? selectedDay
+            scheduledDuration = endOfDay.timeIntervalSince(now)
         }
-        let targetDuration = normalizedTarget?.timeIntervalSince(timeEngine.now) ?? 0
         guard !cleanTitle.isEmpty,
-              ((capsuleMode || isScheduledDate) ? targetDuration > 0 : duration > 0),
+              ((capsuleMode || isScheduledDate) ? (allDayIsValid && scheduledDuration > 0) : duration > 0),
               capsuleMode || isScheduledDate || duration <= maxDuration else { showError = true; return }
         let item = Countdown(title: cleanTitle,
-                             duration: capsuleMode || isScheduledDate ? targetDuration : TimeInterval(duration),
+                             duration: capsuleMode || isScheduledDate ? scheduledDuration : TimeInterval(duration),
                              style: style,
                              isCapsule: capsuleMode,
                              targetDate: normalizedTarget,
                              isDateBased: isScheduledDate,
                              isAllDay: isScheduledDate && allDay,
-                             createdAt: timeEngine.now)
+                             createdAt: now)
         if capsuleMode || isScheduledDate { item.isRunning = true }
         modelContext.insert(item)
         try? modelContext.save()

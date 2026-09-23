@@ -85,6 +85,9 @@ final class TimeEngine {
             refreshNow()
             if source == .network {
                 Task { await synchronize() }
+            } else {
+                scheduledSyncTask?.cancel()
+                scheduledSyncTask = nil
             }
         }
     }
@@ -189,10 +192,7 @@ final class TimeEngine {
         setHundredthUpdates(false)
     }
 
-    func captureMonotonicInstant() -> ContinuousClock.Instant {
-        monotonicNow = clock.now
-        return monotonicNow
-    }
+    var currentMonotonicNow: ContinuousClock.Instant { clock.now }
 
     func recordStopwatchLap() {
         guard stopwatchIsRunning else { return }
@@ -225,8 +225,8 @@ final class TimeEngine {
         guard source == .network else { return }
         scheduledSyncTask = Task { [weak self, clock] in
             try? await clock.sleep(for: .seconds(6 * 60 * 60))
-            guard !Task.isCancelled else { return }
-            await self?.synchronize()
+            guard !Task.isCancelled, let self, self.source == .network else { return }
+            await self.synchronize()
         }
     }
 
@@ -247,9 +247,13 @@ private struct SNTPTimeServer {
     func measuredOffset() async throws -> TimeInterval {
         var samples: [TimeInterval] = []
         for _ in 0..<3 {
-            samples.append(try await requestOffset())
+            if let sample = try? await requestOffset() {
+                samples.append(sample)
+            }
         }
-        return samples.sorted()[samples.count / 2]
+        guard !samples.isEmpty else { throw TimeServerError.unavailable }
+        let sorted = samples.sorted()
+        return sorted[sorted.count / 2]
     }
 
     private func requestOffset() async throws -> TimeInterval {
@@ -346,6 +350,7 @@ private struct SNTPTimeServer {
 private enum TimeServerError: Error {
     case invalidResponse
     case timeout
+    case unavailable
 }
 
 private final class SNTPRequestGate: @unchecked Sendable {

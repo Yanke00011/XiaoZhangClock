@@ -10,7 +10,7 @@ struct ContentView: View {
     @State private var newCountdownIsCapsule = false
     @State private var selectedTab: PixelTab = .clock
     @State private var appeared = false
-    @State private var timeEngine = TimeEngine.shared
+    private let timeEngine = TimeEngine.shared
     @AppStorage("pixelAnimationsEnabled") private var pixelAnimations = true
     @AppStorage("uses24HourTime") private var uses24HourTime = true
     private var now: Date { timeEngine.now }

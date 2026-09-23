@@ -50,7 +50,13 @@ final class Countdown {
 
     func remaining(at date: Date = .now) -> TimeInterval {
         if isCapsule || isDateBased {
-            if isRunning, let targetDate { return max(0, targetDate.timeIntervalSince(date)) }
+            if isRunning, let targetDate {
+                if isAllDay {
+                    let end = Calendar.current.date(byAdding: .day, value: 1, to: targetDate) ?? targetDate
+                    return max(0, end.timeIntervalSince(date))
+                }
+                return max(0, targetDate.timeIntervalSince(date))
+            }
             return max(0, storedRemaining)
         }
         guard isRunning, let startedAt else { return max(0, storedRemaining) }
@@ -60,7 +66,7 @@ final class Countdown {
     func start(at date: Date = .now) {
         guard !isCompleted, remaining(at: date) > 0 else { return }
         storedRemaining = remaining(at: date)
-        if isCapsule || isDateBased { targetDate = date.addingTimeInterval(storedRemaining) }
+        if isCapsule || (isDateBased && !isAllDay) { targetDate = date.addingTimeInterval(storedRemaining) }
         startedAt = date
         isRunning = true
     }
@@ -68,7 +74,7 @@ final class Countdown {
     func pause(at date: Date = .now) {
         guard isRunning else { return }
         storedRemaining = remaining(at: date)
-        if isCapsule || isDateBased { targetDate = nil }
+        if isCapsule || (isDateBased && !isAllDay) { targetDate = nil }
         startedAt = nil
         isRunning = false
         if storedRemaining <= 0 { isCompleted = true }
@@ -78,7 +84,15 @@ final class Countdown {
         isRunning = isCapsule
         startedAt = nil
         storedRemaining = totalDuration
-        targetDate = isCapsule || isDateBased ? date.addingTimeInterval(totalDuration) : nil
+        if isCapsule {
+            targetDate = date.addingTimeInterval(totalDuration)
+        } else if isDateBased && isAllDay {
+            targetDate = Calendar.current.startOfDay(for: date)
+        } else if isDateBased {
+            targetDate = date.addingTimeInterval(totalDuration)
+        } else {
+            targetDate = nil
+        }
         isCompleted = false
     }
 

@@ -147,7 +147,7 @@ struct CountdownCard: View {
 
     private var timeLabel: String {
         if countdown.isDateBased {
-            if countdown.isAllDay && remaining >= 86_400 {
+            if countdown.isAllDay {
                 let days = calendarDaysRemaining
                 return days > 0 ? "\(days)" : "今天"
             }
@@ -164,6 +164,7 @@ struct CountdownCard: View {
     }
     private var showsCalendarDays: Bool {
         guard countdown.isDateBased, !countdown.isCompleted else { return false }
+        if countdown.isAllDay { return calendarDaysRemaining > 0 }
         return remaining >= 86_400 && calendarDaysRemaining > 0
     }
     private var calendarDaysRemaining: Int {
@@ -179,7 +180,7 @@ struct CountdownCard: View {
     }
     private var matrixReadout: some View {
         let value = Int(remaining.rounded(.up))
-        let calendarDays = countdown.isDateBased && remaining >= 86_400 ? calendarDaysRemaining : 0
+        let calendarDays = countdown.isDateBased ? (countdown.isAllDay || remaining >= 86_400 ? calendarDaysRemaining : 0) : 0
         let dayCount = countdown.isDateBased ? calendarDays : value / 86_400
         let usesDays = dayCount > 0
         let first = usesDays ? dayCount : (countdown.isDateBased ? value / 3_600 : (value % 86_400) / 3_600)

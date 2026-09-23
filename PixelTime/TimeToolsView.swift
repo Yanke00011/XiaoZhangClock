@@ -47,14 +47,8 @@ struct PixelTabBar: View {
                     .contentShape(Rectangle())
                     .background {
                         if selection == tab {
-                            Group {
-                                if #available(macOS 26.0, *) {
-                                    Capsule().glassEffect(.regular.tint(PixelTheme.primary.opacity(0.20)).interactive(), in: Capsule())
-                                } else {
-                                    Capsule().fill(PixelTheme.primary.opacity(0.12))
-                                        .overlay(Capsule().stroke(PixelTheme.primary.opacity(0.22), lineWidth: 1))
-                                }
-                            }.matchedGeometryEffect(id: "pixel-tab-selection", in: selectionAnimation)
+                            Capsule().glassEffect(.regular.tint(PixelTheme.primary.opacity(0.20)).interactive(), in: Capsule())
+                                .matchedGeometryEffect(id: "pixel-tab-selection", in: selectionAnimation)
                         }
                     }
                 }
@@ -64,11 +58,7 @@ struct PixelTabBar: View {
         .padding(1)
         .padding(.horizontal, 9).padding(.vertical, 7)
         .background {
-            if #available(macOS 26.0, *) {
-                Capsule().glassEffect(.regular.tint(Color.white.opacity(0.045)).interactive(), in: Capsule())
-            } else {
-                Capsule().fill(PixelTheme.surface.opacity(0.96))
-            }
+            Capsule().glassEffect(.regular.tint(Color.white.opacity(0.045)).interactive(), in: Capsule())
         }
         .overlay(Capsule().stroke(Color.white.opacity(0.24), lineWidth: 0.8))
         .shadow(color: PixelTheme.secondary.opacity(0.08), radius: 14, y: 4)
@@ -159,7 +149,7 @@ struct FocusView: View {
         }
     }
     private var liveRemaining: TimeInterval {
-        isRunning ? max(0, storedRemaining - elapsed(since: startInstant, until: timeEngine.monotonicNow)) : remaining
+        isRunning ? max(0, storedRemaining - elapsed(since: startInstant, until: timeEngine.currentMonotonicNow)) : remaining
     }
     private var clockText: String {
         let n = Int(liveRemaining.rounded(.up))
@@ -206,12 +196,12 @@ struct FocusView: View {
             HStack(spacing: 10) {
                 toolButton(isRunning ? "暂停" : (completed ? "再来一次" : "开始"), icon: isRunning ? .pause : .play, prominent: true) {
                     if isRunning {
-                        startInstant = timeEngine.captureMonotonicInstant()
+                        startInstant = timeEngine.currentMonotonicNow
                         remaining = liveRemaining; storedRemaining = remaining; isRunning = false
                     }
                     else {
                         if completed || remaining <= 0 { remaining = duration; storedRemaining = duration; completed = false }
-                        startInstant = timeEngine.captureMonotonicInstant(); isRunning = true
+                        startInstant = timeEngine.currentMonotonicNow; isRunning = true
                     }
                 }
                 toolButton("重置", icon: .reset, prominent: false) { remaining = duration; storedRemaining = duration; isRunning = false; completed = false }

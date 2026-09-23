@@ -96,53 +96,60 @@ struct PixelWorldBackground: View {
     var tone: Color = PixelTheme.primary
     var particleCount = 22
     var isAnimated = true
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 6.0, paused: reduceMotion || scenePhase != .active || !isAnimated)) { timeline in
-            Canvas { context, size in
-                let step: CGFloat = 36
-                var grid = Path()
-                stride(from: CGFloat(0), through: size.width, by: step).forEach { x in
-                    grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height))
-                }
-                stride(from: CGFloat(0), through: size.height, by: step).forEach { y in
-                    grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y))
-                }
-                context.stroke(grid, with: .color(.white.opacity(0.022)), lineWidth: 0.5)
+    @State private var time: TimeInterval = 0
+    private var isLive: Bool { !reduceMotion && isAnimated && scenePhase == .active }
+    private static let updateInterval: Duration = .milliseconds(1000)
 
-                let time = reduceMotion || !isAnimated ? 0 : timeline.date.timeIntervalSinceReferenceDate
-                for index in 0..<particleCount {
-                    let seed = Double(index)
-                    let baseX = (seed * 0.61803398875).truncatingRemainder(dividingBy: 1)
-                    let baseY = (seed * 0.41421356237 + 0.19).truncatingRemainder(dividingBy: 1)
-                    let x = (baseX + sin(time * 0.12 + seed) * 0.012).truncatingRemainder(dividingBy: 1)
-                    let y = (baseY + cos(time * 0.10 + seed * 1.7) * 0.014).truncatingRemainder(dividingBy: 1)
-                    let twinkle = 0.045 + (sin(time * 0.7 + seed * 2.1) + 1) * 0.026
-                    let side: CGFloat = index.isMultiple(of: 4) ? 3 : 2
-                    let rect = CGRect(x: x * size.width, y: y * size.height, width: side, height: side)
-                    let palette: [Color] = [tone, PixelTheme.primary, PixelTheme.secondary, PixelTheme.accentPink]
-                    context.fill(Path(rect), with: .color(palette[index % palette.count].opacity(twinkle)))
+    var body: some View {
+        canvas(time: isLive ? time : 0)
+            .background(PixelTheme.background)
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
+            .task(id: isLive) {
+                guard isLive else { return }
+                time = Date.now.timeIntervalSinceReferenceDate
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: Self.updateInterval)
+                    guard !Task.isCancelled else { return }
+                    time = Date.now.timeIntervalSinceReferenceDate
                 }
             }
+    }
+
+    private func canvas(time: TimeInterval) -> some View {
+        Canvas { context, size in
+            let step: CGFloat = 36
+            var grid = Path()
+            stride(from: CGFloat(0), through: size.width, by: step).forEach { x in
+                grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height))
+            }
+            stride(from: CGFloat(0), through: size.height, by: step).forEach { y in
+                grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y))
+            }
+            context.stroke(grid, with: .color(.white.opacity(0.022)), lineWidth: 0.5)
+
+            let palette: [Color] = [tone, PixelTheme.primary, PixelTheme.secondary, PixelTheme.accentPink]
+            for index in 0..<particleCount {
+                let seed = Double(index)
+                let baseX = (seed * 0.61803398875).truncatingRemainder(dividingBy: 1)
+                let baseY = (seed * 0.41421356237 + 0.19).truncatingRemainder(dividingBy: 1)
+                let x = (baseX + sin(time * 0.12 + seed) * 0.012).truncatingRemainder(dividingBy: 1)
+                let y = (baseY + cos(time * 0.10 + seed * 1.7) * 0.014).truncatingRemainder(dividingBy: 1)
+                let twinkle = 0.045 + (sin(time * 0.7 + seed * 2.1) + 1) * 0.026
+                let side: CGFloat = index.isMultiple(of: 4) ? 3 : 2
+                let rect = CGRect(x: x * size.width, y: y * size.height, width: side, height: side)
+                context.fill(Path(rect), with: .color(palette[index % palette.count].opacity(twinkle)))
+            }
         }
-        .background(PixelTheme.background)
-        .ignoresSafeArea()
-        .accessibilityHidden(true)
     }
 }
 
 struct PixelSurface<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {
-        Group {
-            if #available(macOS 26.0, *) {
-                content.padding(18)
-                    .glassEffect(.regular.tint(Color.white.opacity(0.035)), in: RoundedRectangle(cornerRadius: 22))
-            } else {
-                content.padding(18)
-                    .background(PixelTheme.surface.opacity(0.96), in: RoundedRectangle(cornerRadius: 22))
-            }
-        }
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(0.14), lineWidth: 0.8))
+        content.padding(18)
+            .glassEffect(.regular.tint(Color.white.opacity(0.035)), in: RoundedRectangle(cornerRadius: 22))
+            .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(0.14), lineWidth: 0.8))
     }
 }
 
