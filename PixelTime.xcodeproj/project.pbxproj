@@ -1,0 +1,322 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A00000000000000000000001 /* PixelTimeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000001 /* PixelTimeApp.swift */; };
+		A00000000000000000000002 /* PixelTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000002 /* PixelTheme.swift */; };
+		A00000000000000000000003 /* Countdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000003 /* Countdown.swift */; };
+		A00000000000000000000004 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000004 /* ContentView.swift */; };
+		A00000000000000000000005 /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000005 /* ClockView.swift */; };
+		A00000000000000000000006 /* CountdownCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000006 /* CountdownCard.swift */; };
+		A00000000000000000000007 /* NewCountdownView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000007 /* NewCountdownView.swift */; };
+		A00000000000000000000008 /* PixelGlyphClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000009 /* PixelGlyphClock.swift */; };
+		A00000000000000000000009 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000010 /* Fonts */; };
+		A00000000000000000000010 /* TimeToolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000011 /* TimeToolsView.swift */; };
+		A00000000000000000000011 /* SettingsAboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000012 /* SettingsAboutView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B00000000000000000000001 /* PixelTimeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelTimeApp.swift; sourceTree = "<group>"; };
+		B00000000000000000000002 /* PixelTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelTheme.swift; sourceTree = "<group>"; };
+		B00000000000000000000003 /* Countdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Countdown.swift; sourceTree = "<group>"; };
+		B00000000000000000000004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B00000000000000000000005 /* ClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
+		B00000000000000000000006 /* CountdownCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownCard.swift; sourceTree = "<group>"; };
+		B00000000000000000000007 /* NewCountdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewCountdownView.swift; sourceTree = "<group>"; };
+		B00000000000000000000008 /* 小张时钟.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "小张时钟.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00000000000000000000009 /* PixelGlyphClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelGlyphClock.swift; sourceTree = "<group>"; };
+		B00000000000000000000010 /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Fonts; sourceTree = "<group>"; };
+		B00000000000000000000011 /* TimeToolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeToolsView.swift; sourceTree = "<group>"; };
+		B00000000000000000000012 /* SettingsAboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAboutView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F00000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C00000000000000000000001 /* PixelTime */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000001 /* PixelTimeApp.swift */,
+				B00000000000000000000002 /* PixelTheme.swift */,
+				B00000000000000000000003 /* Countdown.swift */,
+				B00000000000000000000004 /* ContentView.swift */,
+				B00000000000000000000005 /* ClockView.swift */,
+				B00000000000000000000006 /* CountdownCard.swift */,
+				B00000000000000000000007 /* NewCountdownView.swift */,
+				B00000000000000000000009 /* PixelGlyphClock.swift */,
+				B00000000000000000000011 /* TimeToolsView.swift */,
+				B00000000000000000000012 /* SettingsAboutView.swift */,
+			);
+			path = PixelTime;
+			sourceTree = "<group>";
+		};
+		C00000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				C00000000000000000000001 /* PixelTime */,
+				C00000000000000000000003 /* Products */,
+				C00000000000000000000004 /* PixelTime/Resources */,
+			);
+			sourceTree = "<group>";
+		};
+		C00000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000008 /* 小张时钟.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C00000000000000000000004 /* PixelTime/Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000010 /* Fonts */,
+			);
+			path = PixelTime/Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D00000000000000000000001 /* PixelTime */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E00000000000000000000001 /* Build configuration list for PBXNativeTarget "PixelTime" */;
+			buildPhases = (
+				F00000000000000000000001 /* Sources */,
+				F00000000000000000000002 /* Frameworks */,
+				F00000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PixelTime;
+			productName = "小张时钟";
+			productReference = B00000000000000000000008 /* 小张时钟.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		G00000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = E00000000000000000000002 /* Build configuration list for PBXProject "PixelTime" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				"zh-Hans",
+				Base,
+			);
+			mainGroup = C00000000000000000000002;
+			productRefGroup = C00000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D00000000000000000000001 /* PixelTime */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F00000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000009 /* Fonts in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F00000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000001 /* PixelTimeApp.swift in Sources */,
+				A00000000000000000000002 /* PixelTheme.swift in Sources */,
+				A00000000000000000000003 /* Countdown.swift in Sources */,
+				A00000000000000000000004 /* ContentView.swift in Sources */,
+				A00000000000000000000005 /* ClockView.swift in Sources */,
+				A00000000000000000000006 /* CountdownCard.swift in Sources */,
+				A00000000000000000000007 /* NewCountdownView.swift in Sources */,
+				A00000000000000000000008 /* PixelGlyphClock.swift in Sources */,
+				A00000000000000000000010 /* TimeToolsView.swift in Sources */,
+				A00000000000000000000011 /* SettingsAboutView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		H00000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CURRENT_PROJECT_VERSION = 3;
+				DEAD_CODE_STRIPPING = YES;
+				EXECUTABLE_NAME = PixelTime;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PixelTime/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "小张时钟";
+				INFOPLIST_KEY_CFBundleName = "小张时钟";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.xiaozhang.PixelTime;
+				PRODUCT_NAME = "小张时钟";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		H00000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CURRENT_PROJECT_VERSION = 3;
+				DEAD_CODE_STRIPPING = YES;
+				EXECUTABLE_NAME = PixelTime;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PixelTime/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "小张时钟";
+				INFOPLIST_KEY_CFBundleName = "小张时钟";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.xiaozhang.PixelTime;
+				PRODUCT_NAME = "小张时钟";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		H00000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		H00000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E00000000000000000000001 /* Build configuration list for PBXNativeTarget "PixelTime" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				H00000000000000000000001 /* Debug */,
+				H00000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E00000000000000000000002 /* Build configuration list for PBXProject "PixelTime" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				H00000000000000000000003 /* Debug */,
+				H00000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = G00000000000000000000001 /* Project object */;
+}
