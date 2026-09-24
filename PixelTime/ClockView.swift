@@ -32,22 +32,22 @@ struct ClockView: View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 Rectangle().fill(accent.opacity(0.55)).frame(width: 14, height: 2)
-                Text("像素时钟").pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.muted)
+                Text("像素时钟").pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.textMuted)
                 Rectangle().fill(accent.opacity(0.55)).frame(width: 14, height: 2)
             }
             PixelGlyphClock(value: timeString, color: accent, height: 92).padding(.top, 20)
             HStack(spacing: 8) {
                 if !clockPeriod.isEmpty { Text(clockPeriod).pixelFont(.caption).foregroundStyle(accent) }
                 Text(period).pixelFont(.caption).tracking(1.4).foregroundStyle(accent)
-                Text("·").foregroundStyle(PixelTheme.muted)
+                Text("·").foregroundStyle(PixelTheme.textMuted)
                 Text(dateString).pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.secondary.opacity(0.9))
             }.padding(.top, 9)
             HStack(spacing: 8) {
-                PixelIcon(symbol: .location, color: PixelTheme.muted, size: 9)
+                PixelIcon(symbol: .location, color: PixelTheme.textMuted, size: 9)
                 Text(zoneName).pixelFont(.caption).lineLimit(1)
-                Text("·").foregroundStyle(PixelTheme.muted)
+                Text("·").foregroundStyle(PixelTheme.textMuted)
                 Text(offset).pixelFont(.caption)
-            }.tracking(1).foregroundStyle(PixelTheme.muted).padding(.top, 11)
+            }.tracking(1).foregroundStyle(PixelTheme.textMuted).padding(.top, 11)
             PixelScanline().stroke(Color.white.opacity(0.025), lineWidth: 1).frame(height: 9).padding(.top, 18)
         }
         .frame(maxWidth: .infinity)

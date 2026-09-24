@@ -8,7 +8,7 @@ struct SettingsView: View {
     var body: some View {
         @Bindable var bindableTimeEngine = timeEngine
         VStack(alignment: .leading, spacing: 22) {
-            pageTitle("设置", subtitle: "调整你的像素时间")
+            PixelPageHeader(title: "设置", subtitle: "调整你的像素时间")
             VStack(alignment: .leading, spacing: 18) {
                     sectionTitle("时间")
                     settingRow("时间来源", detail: timeEngine.source.title) {
@@ -23,15 +23,15 @@ struct SettingsView: View {
                             Text(timeEngine.syncState.title).pixelFont(.caption).foregroundStyle(timeStateColor)
                             Spacer()
                             if timeEngine.source == .network {
-                                Text(String(format: "%+.2f 秒", timeEngine.networkOffset)).pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                                Text(String(format: "%+.2f 秒", timeEngine.networkOffset)).pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
                             }
                         }
                         if let lastSync = timeEngine.lastSynchronizedAt {
                             Text("上次校准：\(TimePresentation.time(lastSync)) · Google 公共 NTP")
-                                .pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                                .pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
                         } else {
                             Text("网络校准不会修改 macOS 系统时钟。")
-                                .pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                                .pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
                         }
                         Button {
                             Task { await timeEngine.synchronize() }
@@ -59,7 +59,7 @@ struct SettingsView: View {
                     HStack(spacing: 8) {
                         PixelIcon(symbol: .sparkle, color: PixelTheme.secondary, size: 13)
                     Text("系统辅助功能中的“减少动态效果”始终优先生效。")
-                            .pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                            .pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
                     }
             }
             Rectangle().fill(PixelTheme.border).frame(height: 1).padding(.vertical, 2)
@@ -78,7 +78,7 @@ struct SettingsView: View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).pixelFont(.body).foregroundStyle(PixelTheme.text)
-                Text(detail).pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                Text(detail).pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
             }
             Spacer(minLength: 8)
             control()
@@ -86,25 +86,25 @@ struct SettingsView: View {
     }
 
     private func sectionTitle(_ value: String) -> some View {
-        Text(value).pixelFont(.headline).foregroundStyle(PixelTheme.secondary)
+        Text(value).pixelFont(.sectionTitle).foregroundStyle(PixelTheme.secondary)
     }
 
     private var timeStateColor: Color {
         switch timeEngine.syncState {
         case .synchronized: PixelTheme.success
         case .syncing: PixelTheme.warning
-        case .idle, .unavailable: PixelTheme.muted
+        case .idle, .unavailable: PixelTheme.textMuted
         }
     }
 
     private func colorSwatch(_ title: String, color: Color, selected: Bool) -> some View {
         HStack(spacing: 8) {
-            RoundedRectangle(cornerRadius: 5).fill(color).frame(width: 16, height: 16)
-            Text(title).pixelFont(.caption).foregroundStyle(selected ? PixelTheme.text : PixelTheme.muted)
+            RoundedRectangle(cornerRadius: PixelRadius.micro).fill(color).frame(width: 16, height: 16)
+            Text(title).pixelFont(.caption).foregroundStyle(selected ? PixelTheme.text : PixelTheme.textMuted)
             if selected { PixelIcon(symbol: .play, color: PixelTheme.primary, size: 9) }
         }
         .padding(.horizontal, 11).padding(.vertical, 10)
-        .background(PixelTheme.elevated.opacity(0.7), in: RoundedRectangle(cornerRadius: 10))
+        .background(PixelTheme.surfaceElevated.opacity(0.7), in: RoundedRectangle(cornerRadius: PixelRadius.control))
     }
 }
 
@@ -114,24 +114,24 @@ struct AboutView: View {
 
     var body: some View {
         VStack(spacing: 22) {
-            pageTitle("关于小张时钟", subtitle: "属于你的像素时间世界")
+            PixelPageHeader(title: "关于小张时钟", subtitle: "属于你的像素时间世界")
             PixelSurface {
                 VStack(spacing: 17) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 18).fill(PixelTheme.secondary.opacity(0.16)).frame(width: 76, height: 76)
+                        RoundedRectangle(cornerRadius: PixelRadius.container).fill(PixelTheme.secondary.opacity(0.16)).frame(width: 76, height: 76)
                         PixelIcon(symbol: .clock, color: PixelTheme.primary, size: 44)
                     }
-                    Text("小张时钟").pixelFont(.title).foregroundStyle(PixelTheme.text)
+                    Text("小张时钟").pixelFont(.pageTitle).foregroundStyle(PixelTheme.text)
                     Text("在每一个重要时刻，\n遇见一点像素的光。")
-                        .pixelFont(.body).multilineTextAlignment(.center).lineSpacing(8).foregroundStyle(PixelTheme.muted)
+                        .pixelFont(.body).multilineTextAlignment(.center).lineSpacing(8).foregroundStyle(PixelTheme.textMuted)
                     Rectangle().fill(PixelTheme.border).frame(height: 1)
                     HStack {
-                        Text("版本").pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                        Text("版本").pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
                         Spacer()
                         Text(version).pixelFont(.body).foregroundStyle(PixelTheme.text)
                     }
                     HStack {
-                        Text("构建").pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                        Text("构建").pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
                         Spacer()
                         Text(build).pixelFont(.body).foregroundStyle(PixelTheme.text)
                     }
@@ -141,12 +141,4 @@ struct AboutView: View {
             }
         }
     }
-}
-
-private func pageTitle(_ title: String, subtitle: String) -> some View {
-    VStack(alignment: .leading, spacing: 7) {
-        Text(title).pixelFont(.title).foregroundStyle(PixelTheme.text)
-        Text(subtitle).pixelFont(.body).foregroundStyle(PixelTheme.muted)
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
 }

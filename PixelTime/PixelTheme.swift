@@ -1,24 +1,55 @@
 import SwiftUI
 import CoreText
 
+/// V1.4 Design System color tokens.
+///
+/// The palette is split into four explicit groups so page code never invents
+/// ad-hoc colors: Brand/Accent, Status, Surface, Text. Ambient colors are used
+/// only to tint the background, never to compete with Status.
 enum PixelTheme {
-    static let background = Color(red: 0.025, green: 0.032, blue: 0.068)
-    static let surface = Color(red: 0.054, green: 0.066, blue: 0.12)
-    static let elevated = Color(red: 0.087, green: 0.09, blue: 0.17)
+    // Brand / Accent
     static let primary = Color(red: 0.34, green: 0.86, blue: 1.0)
     static let secondary = Color(red: 0.65, green: 0.51, blue: 1.0)
     static let accentPink = Color(red: 1.0, green: 0.43, blue: 0.72)
     static let accentOrange = Color(red: 1.0, green: 0.65, blue: 0.34)
+
+    // Status
     static let success = Color(red: 0.48, green: 0.94, blue: 0.69)
     static let warning = Color(red: 1.0, green: 0.72, blue: 0.34)
     static let critical = Color(red: 1.0, green: 0.39, blue: 0.51)
-    static let text = Color(red: 0.95, green: 0.96, blue: 1.0)
-    static let muted = Color(red: 0.60, green: 0.64, blue: 0.75)
+
+    // Surface
+    static let background = Color(red: 0.025, green: 0.032, blue: 0.068)
+    static let surface = Color(red: 0.054, green: 0.066, blue: 0.12)
+    static let surfaceElevated = Color(red: 0.087, green: 0.09, blue: 0.17)
     static let border = Color.white.opacity(0.075)
-    static let corner: CGFloat = 15
+    static let borderStrong = Color.white.opacity(0.18)
+
+    // Text
+    static let text = Color(red: 0.95, green: 0.96, blue: 1.0)
+    static let textSecondary = Color(red: 0.78, green: 0.81, blue: 0.9)
+    static let textMuted = Color(red: 0.60, green: 0.64, blue: 0.75)
+
+    // Ambient — mood only tints the background, it is not a status color.
+    static let ambientNight = Color(red: 0.56, green: 0.69, blue: 1.0)
 }
 
-typealias PixelColorTheme = PixelTheme
+/// Geometry tokens. Pixel-native geometry (7×7 icons, PixelCorners, 36pt grid)
+/// is intentionally NOT tokenized here.
+enum PixelRadius {
+    static let container: CGFloat = 16
+    static let control: CGFloat = 10
+    static let micro: CGFloat = 6
+}
+
+enum PixelSpacing {
+    static let xs: CGFloat = 4
+    static let s: CGFloat = 8
+    static let m: CGFloat = 12
+    static let l: CGFloat = 16
+    static let xl: CGFloat = 24
+    static let xxl: CGFloat = 32
+}
 
 struct PixelTimeMood {
     let title: String
@@ -29,7 +60,7 @@ struct PixelTimeMood {
         case 5..<12: PixelTimeMood(title: "早晨", accent: PixelTheme.primary, particleCount: 17)
         case 12..<17: PixelTimeMood(title: "午后", accent: PixelTheme.secondary, particleCount: 20)
         case 17..<21: PixelTimeMood(title: "黄昏", accent: PixelTheme.accentOrange, particleCount: 24)
-        default: PixelTimeMood(title: "夜晚", accent: Color(red: 0.56, green: 0.69, blue: 1.0), particleCount: 27)
+        default: PixelTimeMood(title: "夜晚", accent: PixelTheme.ambientNight, particleCount: 27)
         }
     }
 }
@@ -47,21 +78,22 @@ enum PixelTimeZoneName {
     }
 }
 
+/// V1.4 type scale: seven semantic roles.
+/// Large time digits are intentionally NOT drawn with this font; they use the
+/// pixel glyph renderer (`PixelGlyphClock`). `.countdown` covers the matrix
+/// numeric readout only.
 enum PixelTypography {
-    enum Style { case display, hero, title, headline, body, button, caption, micro, mono, countdown }
+    enum Style { case pageTitle, sectionTitle, body, button, caption, micro, countdown }
     static let postScriptName = "Fusion-Pixel-10px-Mono-zh_hans-Regular"
 
     static func font(_ style: Style) -> Font {
         let size: CGFloat = switch style {
-        case .display: 76
-        case .hero: 92
-        case .title: 27
-        case .headline: 22
+        case .pageTitle: 27
+        case .sectionTitle: 22
         case .body: 17
         case .button: 16
         case .caption: 14
         case .micro: 12
-        case .mono: 15
         case .countdown: 48
         }
         return .custom(postScriptName, size: size, relativeTo: .body)
@@ -144,17 +176,32 @@ struct PixelWorldBackground: View {
     }
 }
 
+/// Content surface for normal content (no Liquid Glass — Glass is reserved for
+/// navigation and overlays). Uses pixel surface + border + rounded container.
 struct PixelSurface<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {
-        content.padding(18)
-            .glassEffect(.regular.tint(Color.white.opacity(0.035)), in: RoundedRectangle(cornerRadius: 22))
-            .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(0.14), lineWidth: 0.8))
+        content.padding(PixelSpacing.l)
+            .background(PixelTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: PixelRadius.container))
+            .overlay(RoundedRectangle(cornerRadius: PixelRadius.container).stroke(PixelTheme.borderStrong, lineWidth: 1))
+    }
+}
+
+/// Single page-header language for the app (leading aligned).
+struct PixelPageHeader: View {
+    var title: String
+    var subtitle: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: PixelSpacing.s) {
+            Text(title).pixelFont(.pageTitle).tracking(1).foregroundStyle(PixelTheme.text)
+            Text(subtitle).pixelFont(.caption).tracking(0.6).foregroundStyle(PixelTheme.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 struct PixelIcon: View {
-    enum Symbol { case clock, plus, play, pause, reset, trash, location, timer, stopwatch, sparkle, capsule, dots, settings, about, timeline }
+    enum Symbol { case clock, plus, play, pause, reset, trash, location, timer, stopwatch, sparkle, capsule, dots, settings, about }
     var symbol: Symbol
     var color: Color = PixelTheme.primary
     var size: CGFloat = 16
@@ -175,7 +222,6 @@ struct PixelIcon: View {
         case .dots: [".......", ".......", "#...#..", ".......", "#...#..", ".......", "#...#.."]
         case .settings: ["..###..", ".#...#.", "##.#.##", "#..#..#", "##.#.##", ".#...#.", "..###.."]
         case .about: ["..###..", ".#...#.", "...#...", "...#...", "...#...", ".......", "...#..."]
-        case .timeline: [".......", ".......", "#.#.#.#", "..#.#..", ".#...#.", ".......", "......."]
         }
     }
     var body: some View {

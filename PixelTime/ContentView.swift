@@ -20,15 +20,13 @@ struct ContentView: View {
         case .clock: mood.accent
         case .timers: PixelTheme.accentPink
         case .stopwatch: PixelTheme.secondary
-        case .focus: PixelTheme.success
-        case .explore: PixelTheme.accentOrange
         case .settings, .about: PixelTheme.secondary
         }
     }
 
     var body: some View {
         ZStack {
-            PixelWorldBackground(tone: pageAccent, particleCount: selectedTab == .focus ? 7 : mood.particleCount, isAnimated: pixelAnimations)
+            PixelWorldBackground(tone: pageAccent, particleCount: mood.particleCount, isAnimated: pixelAnimations)
             RadialGradient(colors: [pageAccent.opacity(0.095), .clear], center: .top, startRadius: 10, endRadius: 430).ignoresSafeArea().allowsHitTesting(false)
             VStack(spacing: 0) {
                 ScrollView {
@@ -76,8 +74,8 @@ struct ContentView: View {
             Button { presentNewCountdown(capsule: false) } label: {
                 HStack(spacing: 9) { PixelIcon(symbol: .plus, size: 12); Text("新建倒计时").pixelFont(.button) }
                     .tracking(1).foregroundStyle(PixelTheme.primary).padding(.vertical, 15).frame(maxWidth: .infinity)
-                    .background(PixelTheme.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 11))
-                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(PixelTheme.primary.opacity(0.18), style: StrokeStyle(lineWidth: 1, dash: [3, 4])))
+                    .background(PixelTheme.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: PixelRadius.control))
+                    .overlay(RoundedRectangle(cornerRadius: PixelRadius.control).stroke(PixelTheme.primary.opacity(0.18), style: StrokeStyle(lineWidth: 1, dash: [3, 4])))
             }.buttonStyle(PixelButtonStyle()).padding(.top, 15).padding(.bottom, 24)
         case .timers:
             countdownSection.padding(.top, 34)
@@ -86,8 +84,6 @@ struct ContentView: View {
                 actionButton("时间胶囊", icon: .capsule) { presentNewCountdown(capsule: true) }
             }.padding(.top, 17).padding(.bottom, 26)
         case .stopwatch: StopwatchView().padding(.top, 36).padding(.bottom, 30)
-        case .focus: FocusView().padding(.top, 36).padding(.bottom, 30)
-        case .explore: TimeMachineView().padding(.top, 36).padding(.bottom, 30)
         case .settings: SettingsView(pixelAnimations: $pixelAnimations, uses24HourTime: $uses24HourTime).padding(.top, 34).padding(.bottom, 30)
         case .about: AboutView().padding(.top, 34).padding(.bottom, 30)
         }
@@ -109,8 +105,8 @@ struct ContentView: View {
         Button(action: action) {
             HStack(spacing: 8) { PixelIcon(symbol: icon, size: 12); Text(title).pixelFont(.button) }
                 .tracking(0.5).foregroundStyle(PixelTheme.primary).padding(.vertical, 13).frame(maxWidth: .infinity)
-                .background(PixelTheme.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(PixelTheme.border, lineWidth: 1))
+                .background(PixelTheme.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: PixelRadius.control))
+                .overlay(RoundedRectangle(cornerRadius: PixelRadius.control).stroke(PixelTheme.border, lineWidth: 1))
         }.buttonStyle(PixelButtonStyle())
     }
 
@@ -123,16 +119,16 @@ struct ContentView: View {
         HStack {
             HStack(spacing: 10) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 6).fill(PixelTheme.primary.opacity(0.13)).frame(width: 28, height: 28)
+                    RoundedRectangle(cornerRadius: PixelRadius.micro).fill(PixelTheme.primary.opacity(0.13)).frame(width: 28, height: 28)
                     PixelIcon(symbol: .clock, size: 16)
                 }
-                Text("小张时钟").pixelFont(.title).tracking(2).foregroundStyle(PixelTheme.text)
+                Text("小张时钟").pixelFont(.pageTitle).tracking(2).foregroundStyle(PixelTheme.text)
             }
             Spacer()
             HStack(spacing: 6) {
                 Circle().fill(PixelTheme.primary).frame(width: 5, height: 5).shadow(color: PixelTheme.primary.opacity(0.7), radius: 5)
                 Text(headerTimeStatus)
-                    .pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.muted)
+                    .pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.textMuted)
             }
         }.padding(.top, 24)
     }
@@ -150,11 +146,11 @@ struct ContentView: View {
     private var sectionHeader: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("倒计时").pixelFont(.headline).tracking(1).foregroundStyle(PixelTheme.text)
-                Text("\(countdowns.count.formatted(.number.precision(.integerLength(2)))) 个计时项目").pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.muted)
+                Text("倒计时").pixelFont(.sectionTitle).tracking(1).foregroundStyle(PixelTheme.text)
+                Text("\(countdowns.count.formatted(.number.precision(.integerLength(2)))) 个计时项目").pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.textMuted)
             }
             Spacer()
-            PixelIcon(symbol: .timer, color: PixelTheme.muted, size: 14)
+            PixelIcon(symbol: .timer, color: PixelTheme.textMuted, size: 14)
         }
         .padding(.top, 2)
         .overlay(alignment: .top) { Rectangle().fill(PixelTheme.border).frame(height: 1).offset(y: -17) }
@@ -164,7 +160,7 @@ struct ContentView: View {
         VStack(spacing: 8) {
             PixelIcon(symbol: .sparkle, size: 22).padding(.bottom, 5)
             Text("还没有倒计时").pixelFont(.body).foregroundStyle(PixelTheme.text)
-            Text("为重要的时刻留出时间").pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.muted)
+            Text("为重要的时刻留出时间").pixelFont(.caption).tracking(1).foregroundStyle(PixelTheme.textMuted)
         }.frame(maxWidth: .infinity).padding(.vertical, 16)
     }
 }

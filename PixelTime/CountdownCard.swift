@@ -24,7 +24,7 @@ struct CountdownCard: View {
         if fraction <= 0.10 { return PixelTheme.critical }
         if fraction <= 0.30 { return PixelTheme.warning }
         if countdown.isCapsule { return PixelTheme.accentPink }
-        return countdown.isRunning ? PixelTheme.primary : PixelTheme.muted
+        return countdown.isRunning ? PixelTheme.primary : PixelTheme.textMuted
     }
 
     var body: some View {
@@ -33,7 +33,7 @@ struct CountdownCard: View {
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 6) {
                         if countdown.isCapsule { PixelIcon(symbol: .capsule, size: 11) }
-                        Text(countdown.title.uppercased()).pixelFont(.headline).tracking(1).foregroundStyle(PixelTheme.text).lineLimit(1)
+                        Text(countdown.title.uppercased()).pixelFont(.sectionTitle).tracking(1).foregroundStyle(PixelTheme.text).lineLimit(1)
                     }
                     HStack(spacing: 5) {
                         Rectangle().fill(statusColor).frame(width: 5, height: 5)
@@ -45,19 +45,19 @@ struct CountdownCard: View {
                     if reduceMotion { showingActions.toggle() }
                     else { withAnimation(.easeOut(duration: 0.12)) { showingActions.toggle() } }
                 } label: {
-                    PixelIcon(symbol: .dots, color: PixelTheme.muted, size: 13).frame(width: 28, height: 24).contentShape(Rectangle())
+                    PixelIcon(symbol: .dots, color: PixelTheme.textMuted, size: 13).frame(width: 28, height: 24).contentShape(Rectangle())
                 }.buttonStyle(.plain)
             }
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Group {
                     if countdown.isCompleted && collapseProgress < 0 {
-                        Text("时间到").pixelFont(.headline).tracking(1).foregroundStyle(PixelTheme.primary)
+                        Text("时间到").pixelFont(.sectionTitle).tracking(1).foregroundStyle(PixelTheme.primary)
                     } else if countdown.style == .matrix {
                         matrixReadout.frame(maxWidth: .infinity)
                     } else {
                         HStack(alignment: .firstTextBaseline, spacing: 5) {
                             PixelGlyphClock(value: timeLabel, collapseProgress: collapseProgress >= 0 ? collapseProgress : nil, height: 44)
-                            if showsCalendarDays { Text("天").pixelFont(.caption).foregroundStyle(PixelTheme.muted) }
+                            if showsCalendarDays { Text("天").pixelFont(.caption).foregroundStyle(PixelTheme.textMuted) }
                         }
                     }
                 }
@@ -69,7 +69,7 @@ struct CountdownCard: View {
             }
             HStack {
                 Text(countdown.isDateBased ? targetSummary : "\(Int(fraction * 100))% \(countdown.isCapsule ? "后开启" : "剩余")")
-                    .pixelFont(.caption).tracking(0.4).foregroundStyle(PixelTheme.muted)
+                    .pixelFont(.caption).tracking(0.4).foregroundStyle(PixelTheme.textMuted)
                 Spacer()
                 if countdown.style == .ring {
                     PixelRing(fraction: fraction, color: countdown.isRunning || countdown.isCompleted ? statusColor : PixelTheme.primary.opacity(0.7))
@@ -83,13 +83,13 @@ struct CountdownCard: View {
                 } label: {
                     HStack(spacing: 7) { PixelIcon(symbol: countdown.isRunning ? .pause : .play, color: PixelTheme.background, size: 11); Text(buttonTitle).pixelFont(.button) }.tracking(0.5)
                         .foregroundStyle(PixelTheme.background).padding(.horizontal, 13).padding(.vertical, 7)
-                        .background(PixelTheme.primary, in: RoundedRectangle(cornerRadius: 6))
+                        .background(PixelTheme.primary, in: RoundedRectangle(cornerRadius: PixelRadius.micro))
                 }.buttonStyle(PixelButtonStyle())
             }
         }
         .padding(.horizontal, 17).padding(.vertical, 15)
-        .background(LinearGradient(colors: [PixelTheme.elevated, PixelTheme.surface], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: PixelTheme.corner))
-        .overlay(RoundedRectangle(cornerRadius: PixelTheme.corner).stroke(PixelTheme.border, lineWidth: 1))
+        .background(LinearGradient(colors: [PixelTheme.surfaceElevated, PixelTheme.surface], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: PixelRadius.container))
+        .overlay(RoundedRectangle(cornerRadius: PixelRadius.container).stroke(PixelTheme.border, lineWidth: 1))
         .overlay(PixelCorners().stroke(PixelTheme.primary.opacity(0.28), lineWidth: 1).padding(1))
         .overlay {
             Group {
@@ -203,7 +203,7 @@ struct CountdownCard: View {
     private func matrixColumn(_ value: Int, unit: String) -> some View {
         VStack(spacing: 2) {
             Text(String(format: "%02d", value)).pixelFont(.countdown).foregroundStyle(PixelTheme.text)
-            Text(unit).pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+            Text(unit).pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
         }.padding(.horizontal, 6).padding(.vertical, 4).background(PixelTheme.primary.opacity(0.07), in: Rectangle())
     }
     private var buttonTitle: String { countdown.isRunning ? "暂停" : (countdown.isCompleted ? "重新开始" : "开始") }

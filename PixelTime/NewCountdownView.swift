@@ -28,11 +28,11 @@ struct NewCountdownView: View {
         VStack(alignment: .leading, spacing: 23) {
             HStack {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(capsuleMode ? "新建时间胶囊" : "新建倒计时").pixelFont(.headline).tracking(1).foregroundStyle(PixelTheme.text)
-                    Text("为下一段时光取个名字").pixelFont(.caption).tracking(0.6).foregroundStyle(PixelTheme.muted)
+                    Text(capsuleMode ? "新建时间胶囊" : "新建倒计时").pixelFont(.sectionTitle).tracking(1).foregroundStyle(PixelTheme.text)
+                    Text("为下一段时光取个名字").pixelFont(.caption).tracking(0.6).foregroundStyle(PixelTheme.textMuted)
                 }
                 Spacer()
-                Button { dismiss() } label: { Text("×").pixelFont(.body).foregroundStyle(PixelTheme.muted).padding(7).background(Color.white.opacity(0.06), in: Circle()) }.buttonStyle(.plain)
+                Button { dismiss() } label: { Text("×").pixelFont(.body).foregroundStyle(PixelTheme.textMuted).padding(7).background(Color.white.opacity(0.06), in: Circle()) }.buttonStyle(.plain)
             }
             HStack(spacing: 6) {
                 modeButton("倒计时", selected: !capsuleMode) { capsuleMode = false }
@@ -47,8 +47,8 @@ struct NewCountdownView: View {
             VStack(alignment: .leading, spacing: 8) {
                 fieldLabel("名称")
                 TextField("例如：周末旅行", text: $title).textFieldStyle(.plain).pixelFont(.body).foregroundStyle(PixelTheme.text)
-                    .padding(12).background(PixelTheme.background.opacity(0.7), in: RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(PixelTheme.border, lineWidth: 1))
+                    .padding(12).background(PixelTheme.background.opacity(0.7), in: RoundedRectangle(cornerRadius: PixelRadius.control))
+                    .overlay(RoundedRectangle(cornerRadius: PixelRadius.control).stroke(PixelTheme.border, lineWidth: 1))
             }
             if capsuleMode || dateMode {
                 VStack(alignment: .leading, spacing: 12) {
@@ -59,7 +59,7 @@ struct NewCountdownView: View {
                         Toggle(isOn: $allDay) {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("全天事件").pixelFont(.body).foregroundStyle(PixelTheme.text)
-                                Text("按日历日期计算，不指定时刻").pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                                Text("按日历日期计算，不指定时刻").pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
                             }
                         }.toggleStyle(.switch).tint(PixelTheme.primary)
                     }
@@ -68,7 +68,7 @@ struct NewCountdownView: View {
                             .datePickerStyle(.compact).labelsHidden().environment(\.font, PixelTypography.font(.body))
                     }
                     Text(capsuleMode ? "到达这个时刻，胶囊便会开启。" : (allDay ? "目标日期按当前日历和时区计算。" : "进入最后 24 小时后，将显示时分秒。"))
-                        .pixelFont(.caption).foregroundStyle(PixelTheme.muted)
+                        .pixelFont(.caption).foregroundStyle(PixelTheme.textMuted)
                 }
             } else {
                 VStack(alignment: .leading, spacing: 11) {
@@ -92,12 +92,12 @@ struct NewCountdownView: View {
                     .pixelFont(.caption).foregroundStyle(.orange)
             }
             HStack(spacing: 10) {
-                Button("取消") { dismiss() }.pixelFont(.button).tracking(0.6).foregroundStyle(PixelTheme.muted)
-                    .frame(maxWidth: .infinity).padding(.vertical, 12).background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 8))
+                Button("取消") { dismiss() }.pixelFont(.button).tracking(0.6).foregroundStyle(PixelTheme.textMuted)
+                    .frame(maxWidth: .infinity).padding(.vertical, 12).background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: PixelRadius.control))
                 Button(action: create) {
                     HStack { PixelIcon(symbol: .plus, color: PixelTheme.background, size: 10); Text("创建").pixelFont(.button) }
                         .tracking(0.6).foregroundStyle(PixelTheme.background)
-                        .frame(maxWidth: .infinity).padding(.vertical, 12).background(PixelTheme.primary, in: RoundedRectangle(cornerRadius: 8))
+                        .frame(maxWidth: .infinity).padding(.vertical, 12).background(PixelTheme.primary, in: RoundedRectangle(cornerRadius: PixelRadius.control))
                 }.buttonStyle(PixelButtonStyle())
             }
         }
@@ -105,23 +105,23 @@ struct NewCountdownView: View {
     }
 
     private func fieldLabel(_ value: String) -> some View {
-        Text(value).pixelFont(.caption).tracking(0.6).foregroundStyle(PixelTheme.muted)
+        Text(value).pixelFont(.caption).tracking(0.6).foregroundStyle(PixelTheme.textMuted)
     }
     private func durationPicker(_ label: String, value: Binding<Int>, range: ClosedRange<Int>) -> some View {
         VStack(spacing: 5) {
-            Text(label).pixelFont(.caption).tracking(0.1).foregroundStyle(PixelTheme.muted)
+            Text(label).pixelFont(.caption).tracking(0.1).foregroundStyle(PixelTheme.textMuted)
             HStack(spacing: 3) {
                 Button { value.wrappedValue = max(range.lowerBound, value.wrappedValue - 1) } label: { Text("−").pixelFont(.caption).foregroundStyle(PixelTheme.primary) }
                 Text(String(format: "%02d", value.wrappedValue)).pixelFont(.caption).foregroundStyle(PixelTheme.text).frame(minWidth: 21)
                 Button { value.wrappedValue = min(range.upperBound, value.wrappedValue + 1) } label: { Text("+").pixelFont(.caption).foregroundStyle(PixelTheme.primary) }
             }.buttonStyle(.plain).frame(maxWidth: .infinity).padding(.vertical, 7)
-                .background(PixelTheme.background.opacity(0.75), in: RoundedRectangle(cornerRadius: 7))
+                .background(PixelTheme.background.opacity(0.75), in: RoundedRectangle(cornerRadius: PixelRadius.micro))
         }
     }
     private func modeButton(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title).pixelFont(.caption).tracking(0.1).lineLimit(1).minimumScaleFactor(0.7)
-                .foregroundStyle(selected ? PixelTheme.background : PixelTheme.muted)
+                .foregroundStyle(selected ? PixelTheme.background : PixelTheme.textMuted)
                 .frame(maxWidth: .infinity).padding(.vertical, 9)
                 .background(selected ? PixelTheme.primary : PixelTheme.background.opacity(0.72), in: Rectangle())
                 .overlay(Rectangle().stroke(selected ? PixelTheme.primary : PixelTheme.border, lineWidth: 1))
